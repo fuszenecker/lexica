@@ -63,6 +63,7 @@ class LsDictionary
             content = Regex.Replace(content, "<itype>([^<>]+)</itype>", match => $"{ESC}G{match.Groups[1].Value}{ESC}g", RegexOptions.Compiled);
             content = Regex.Replace(content, "<gen>([^<>]+)</gen>", match => $"{ESC}G{match.Groups[1].Value}{ESC}g", RegexOptions.Compiled);
             content = Regex.Replace(content, "<case>([^<>]+)</case>", match => $"{ESC}Y{match.Groups[1].Value}{ESC}g", RegexOptions.Compiled);
+            content = Regex.Replace(content, "<foreign[^<>]*>([^<>]+)</foreign>", match => $"{ESC}y{match.Groups[1].Value}{ESC}g", RegexOptions.Compiled);
             content = Regex.Replace(content, "<etym>([^<>]+)</etym>", match => $"\n{ESC}Y{match.Groups[1].Value}{ESC}g", RegexOptions.Compiled);
 
             content = Regex.Replace(content, "<hi[^<>]*>([^<>]+)</hi>", match => $"{ESC}M{match.Groups[1].Value}{ESC}g", RegexOptions.Compiled);
@@ -76,7 +77,6 @@ class LsDictionary
             content = Regex.Replace(content, "<cit[^<>]*>([^<>]+)</cit>", match => match.Groups[1].Value, RegexOptions.Compiled);
             content = Regex.Replace(content, "<pos[^<>]*>([^<>]+)</pos>", match => match.Groups[1].Value, RegexOptions.Compiled);
             content = Regex.Replace(content, "<cb[^<>]*/>", match => match.Groups[1].Value, RegexOptions.Compiled);
-            content = Regex.Replace(content, "<foreign[^<>]*>([^<>]+)</foreign>", match => $"{ESC}y{match.Groups[1].Value}{ESC}g", RegexOptions.Compiled);
 
             content = Regex.Replace(content, "<sense[^<>]*>([^<>]+)</sense>", match => $"\n{match.Groups[1].Value}", RegexOptions.Compiled);
             content = Regex.Replace(content, "<entryFree[^<>]*>([^<>]+)</entryFree>", match => $"{match.Groups[1].Value}\n", RegexOptions.Compiled);
