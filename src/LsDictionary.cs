@@ -27,7 +27,7 @@ class LsDictionary
         _colorStack.Clear();
 
         var results = new List<XElement>();
-        var regex = new Regex($"^{term}$", RegexOptions.IgnoreCase | RegexOptions.Singleline | RegexOptions.Compiled);
+        var regex = new Regex($"^{term}[0-9]*$", RegexOptions.IgnoreCase | RegexOptions.Singleline | RegexOptions.Compiled);
         
         foreach (var dictionary in _dictionaries)
         {
@@ -112,8 +112,8 @@ class LsDictionary
                 // Declension or conjugation.
                 .ReplaceFormatting("itype", "G")
 
-                // Etymology.
-                .ReplaceFormatting("etym", "C")
+                // Declension or conjugation.
+                .ReplaceFormatting("gen", "G")
 
                 // Foreign word.
                 .ReplaceFormatting("foreign", "y")
@@ -132,7 +132,7 @@ class LsDictionary
                 .ReplaceFormatting("bibl", "g")
 
                 // Quote.
-                .ReplaceFormatting("quote", "R", after: " ")
+                .ReplaceFormatting("quote", "Y", after: " ")
                 
                 // Citations.
                 .ReplaceFormatting("cit", "")
@@ -140,17 +140,26 @@ class LsDictionary
                 // Case.
                 .ReplaceFormatting("case", "M")
 
+                // Number.
+                .ReplaceFormatting("number", "M")
+
                 // Usage.
-                .ReplaceFormatting("usg", "Y")
+                .ReplaceFormatting("usg", "C")
 
                 // Cb.
                 .RemoveCompletely("cb")
+
+                // Pb.
+                .RemoveCompletely("pb")
 
                 // Pos.
                 .ReplaceFormatting("pos", "")
 
                 // Sense.
                 .ReplaceFormatting("sense", "", before: Environment.NewLine + Environment.NewLine)
+
+                // Etymology.
+                .ReplaceFormatting("etym", "", before: " {", after: "}")
 
                 // Entry
                 .ReplaceFormatting("entryFree", "");
@@ -160,9 +169,8 @@ class LsDictionary
             Regex regex = new Regex(highlights, RegexOptions.IgnoreCase);
             content = regex.Replace(content, match => $"{ESC}_{match.Value}{ESC}{RETURN}");
 
-            Console.WriteLine("-------------------------------------------------------------------------------");
-            Printer.PrintInColors($"{ESC}D{content.Trim()}");
-            Console.WriteLine();
+            Console.WriteLine("\n-------------------------------------------------------------------------------\n");
+            Printer.PrintInColors($"{ESC}D{content.Trim()}\n");
         }
     }
 

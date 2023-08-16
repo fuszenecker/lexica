@@ -98,8 +98,8 @@ internal static class Printer
                     break;
 
                 case '_':
-                    Console.ForegroundColor = ConsoleColor.White;
-                    Console.BackgroundColor = ConsoleColor.Red;
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.BackgroundColor = ConsoleColor.Black;
                     Console.Write(part[1..]);
                     break;
 

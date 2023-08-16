@@ -43,4 +43,15 @@ rootCommand.SetHandler((headwordTerm, meaningTerm, fullSearchTerm) =>
     }
 }, headwordOption, meaningOption, fullSearchOption);
 
-rootCommand.Invoke(args);
+try
+{
+    rootCommand.Invoke(args);
+}
+catch (TargetInvocationException ex)
+{
+    Console.WriteLine(ex.InnerException?.Message);
+}
+catch (Exception ex)
+{
+    Console.WriteLine(ex.Message);
+}
