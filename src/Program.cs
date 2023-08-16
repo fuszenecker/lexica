@@ -1,4 +1,5 @@
 ﻿using System.CommandLine;
+using System.Reflection;
 using LsReader;
 
 var headwordOption = new Option<string?>(
@@ -22,7 +23,7 @@ rootCommand.Add(headwordOption);
 rootCommand.Add(meaningOption);
 rootCommand.Add(fullSearchOption);
 
-rootCommand.SetHandler((headwordTerm, contentTerm, fullSearchTerm) =>
+rootCommand.SetHandler((headwordTerm, meaningTerm, fullSearchTerm) =>
 {
     var dictionary = new LsDictionary();
 
@@ -31,9 +32,9 @@ rootCommand.SetHandler((headwordTerm, contentTerm, fullSearchTerm) =>
         dictionary.LookupHeadword(headwordTerm);
     }
 
-    if (!string.IsNullOrEmpty(contentTerm))
+    if (!string.IsNullOrEmpty(meaningTerm))
     {
-        dictionary.LookupContent(contentTerm);
+        dictionary.LookupMeaning(meaningTerm);
     }
 
     if (!string.IsNullOrEmpty(fullSearchTerm))

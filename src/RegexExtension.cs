@@ -2,7 +2,7 @@ using System.Text.RegularExpressions;
 
 namespace LsReader;
 
-static class RegexExtension
+internal static class RegexExtension
 {
     const string ESC = "¤";
     const char RETURN = '÷';
@@ -12,8 +12,18 @@ static class RegexExtension
         return Regex.Replace(content, $"<{node}[^<>]*>([^<>]*)</{node}>", 
             match => 
                 before + 
-                $"{ESC}{color}{match.Groups[1].Value}{ESC}{RETURN}" +
+                (string.IsNullOrWhiteSpace(color) ? "" : $"{ESC}{color}") +
+                $"{match.Groups[1].Value.Trim()}" +
+                (string.IsNullOrWhiteSpace(color) ? "" : $"{ESC}{RETURN}") +
                 after,
             RegexOptions.Compiled);
+    }
+
+    public static string RemoveCompletely(this string content, string node)
+    {
+        var result = Regex.Replace(content, $"<{node}[^<>]*>([^<>]*)</{node}>", match => "", RegexOptions.Compiled);
+        result = Regex.Replace(result, $"<{node}[^<>]*/>", match => "", RegexOptions.Compiled);
+
+        return result;
     }
 }
