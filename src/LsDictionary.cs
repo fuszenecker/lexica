@@ -8,7 +8,8 @@ class LsDictionary
 {
     private const string DictionaryPath = "Dictionaries";
     const char ESC = '¤';
-    static readonly Queue<char> _colorStack = new();
+    const char RETURN = '÷';
+    static readonly Stack<char> _colorStack = new();
 
     private readonly IList<XElement> _dictionaries = new List<XElement>();
 
@@ -25,7 +26,6 @@ class LsDictionary
         }
 
         _colorStack.Clear();
-        _colorStack.Enqueue('D');
 
         var results = new List<XElement>();
         var regex = new Regex($"^{term}$", RegexOptions.IgnoreCase | RegexOptions.Singleline | RegexOptions.Compiled);
@@ -53,7 +53,6 @@ class LsDictionary
         }
 
         _colorStack.Clear();
-        _colorStack.Enqueue('D');
 
         var results = new List<XElement>();
         var regex = new Regex($"{term}", RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.Compiled);
@@ -80,7 +79,6 @@ class LsDictionary
         }
 
         _colorStack.Clear();
-        _colorStack.Enqueue('D');
 
         var results = new List<XElement>();
         var regex = new Regex($"{term}", RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.Compiled);
@@ -109,10 +107,19 @@ class LsDictionary
 
             // Headword.
             content = content
+                // Headword.
+                .ReplaceFormatting("orth", "=")
+
+                // Declension or conjugation.
+                .ReplaceFormatting("itype", "=")
+
+                // Author
+                .ReplaceFormatting("author", "g")
+
                 ;
 
             Console.WriteLine("-------------------------------------------------------------------------------");
-            PrintInColors(content.Trim());
+            PrintInColors($"{ESC}D{content.Trim()}");
             Console.WriteLine();
         }
     }
@@ -130,13 +137,14 @@ class LsDictionary
 
             var color = part[0];
 
-            if (color == ESC)
+            if (color == RETURN)
             {
-                color = _colorStack.Dequeue();
+                _colorStack.Pop();
+                color = _colorStack.Peek();
             }
             else
             {
-                _colorStack.Enqueue(color);
+                _colorStack.Push(color);
             }
 
             switch (color)
@@ -214,8 +222,8 @@ class LsDictionary
                     break;
 
                 case '=':
-                    Console.ForegroundColor = ConsoleColor.White;
-                    Console.BackgroundColor = ConsoleColor.Blue;
+                    Console.ForegroundColor = ConsoleColor.Black;
+                    Console.BackgroundColor = ConsoleColor.Green;
                     Console.Write(part[1..]);
                     break;
 
