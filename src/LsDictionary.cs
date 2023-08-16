@@ -155,11 +155,11 @@ class LsDictionary
                 // Pos.
                 .ReplaceFormatting("pos", "")
 
-                // Sense.
-                .ReplaceFormatting("sense", "", before: Environment.NewLine + Environment.NewLine)
-
                 // Etymology.
                 .ReplaceFormatting("etym", "", before: " {", after: "}")
+
+                // Sense.
+                .ReplaceFormatting("sense", "", before: Environment.NewLine + Environment.NewLine)
 
                 // Entry
                 .ReplaceFormatting("entryFree", "");
