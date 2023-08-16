@@ -1,5 +1,4 @@
-using System.Net.Mime;
-using System.Text;
+using System.Drawing;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 
@@ -8,41 +7,96 @@ namespace LsReader;
 class LsDictionary
 {
     private const string DictionaryPath = "Dictionaries";
-    const string ESC = "¤";
-    const string printable = "[a-zA-Z0-9:.,ē]";
+    const char ESC = '¤';
+    static readonly Queue<char> _colorStack = new();
 
-    private IList<XElement> _dictionaries = new List<XElement>();
-    private int _tabWidth = 4;
+    private readonly IList<XElement> _dictionaries = new List<XElement>();
 
-    public LsDictionary(int tabWidth = 4)
+    public LsDictionary()
     {
-        _tabWidth = tabWidth;
         LoadDictionaries();
     }
 
-    public void LookupHeadword(string? headwordOptionValue)
+    public void LookupHeadword(string? term)
     {
-        if (headwordOptionValue is null)
+        if (term is null)
         {
             return;
         }
 
+        _colorStack.Clear();
+        _colorStack.Enqueue('D');
+
         var results = new List<XElement>();
-        var regex = new Regex($"^{headwordOptionValue}$", RegexOptions.IgnoreCase | RegexOptions.Singleline | RegexOptions.Compiled);
+        var regex = new Regex($"^{term}$", RegexOptions.IgnoreCase | RegexOptions.Singleline | RegexOptions.Compiled);
         
         foreach (var dictionary in _dictionaries)
         {
             foreach (var entry in dictionary.Descendants("entryFree"))
             {
                 if (entry.Attribute("key")?.Value is not null && regex.IsMatch(entry.Attribute("key")!.Value) 
-                    || entry.Element("ort")?.Value is not null && regex.IsMatch(entry.Element("ort")!.Value))
+                    || entry.Element("orth")?.Value is not null && regex.IsMatch(entry.Element("orth")!.Value))
                 {
                     results.Add(entry);
                 }
             }
         }
 
-        PrintResults(results, headwordOptionValue);
+        PrintResults(results, term);
+    }
+
+    public void LookupContent(string? term)
+    {
+        if (term is null)
+        {
+            return;
+        }
+
+        _colorStack.Clear();
+        _colorStack.Enqueue('D');
+
+        var results = new List<XElement>();
+        var regex = new Regex($"{term}", RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.Compiled);
+        
+        foreach (var dictionary in _dictionaries)
+        {
+            foreach (var entry in dictionary.Descendants("entryFree"))
+            {
+                if (entry?.Descendants("hi").Any(e => regex.IsMatch(e.Value)) == true)
+                {
+                    results.Add(entry);
+                }
+            }
+        }
+
+        PrintResults(results, term);
+    }
+
+    public void LookupFullSearch(string? term)
+    {
+        if (term is null)
+        {
+            return;
+        }
+
+        _colorStack.Clear();
+        _colorStack.Enqueue('D');
+
+        var results = new List<XElement>();
+        var regex = new Regex($"{term}", RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.Compiled);
+        
+        foreach (var dictionary in _dictionaries)
+        {
+            foreach (var entry in dictionary.Descendants("entryFree"))
+            {
+                if (entry?.Value is not null && regex.IsMatch(entry!.Value))
+                {
+                    results.Add(entry);
+                }
+            }
+        }
+
+        PrintResults(results, term);
     }
 
     private void PrintResults(List<XElement> results, string highlights)
@@ -53,37 +107,13 @@ class LsDictionary
         {
             var content = element.ToString();
 
-            Console.WriteLine();
-            Console.WriteLine("-- DEBUG -------------------------------");
-            Console.WriteLine(content);
-            Console.WriteLine("-- DEBUG -------------------------------");
-            Console.WriteLine();
+            // Headword.
+            content = content
+                ;
 
-            content = Regex.Replace(content, "<orth[^<>]+>([^<>]+)</orth>", match => $"{ESC}G{match.Groups[1].Value}{ESC}g", RegexOptions.Compiled);
-            content = Regex.Replace(content, "<itype>([^<>]+)</itype>", match => $"{ESC}G{match.Groups[1].Value}{ESC}g", RegexOptions.Compiled);
-            content = Regex.Replace(content, "<gen>([^<>]+)</gen>", match => $"{ESC}G{match.Groups[1].Value}{ESC}g", RegexOptions.Compiled);
-            content = Regex.Replace(content, "<case>([^<>]+)</case>", match => $"{ESC}Y{match.Groups[1].Value}{ESC}g", RegexOptions.Compiled);
-            content = Regex.Replace(content, "<foreign[^<>]*>([^<>]+)</foreign>", match => $"{ESC}y{match.Groups[1].Value}{ESC}g", RegexOptions.Compiled);
-            content = Regex.Replace(content, "<etym>([^<>]+)</etym>", match => $"\n{ESC}Y{match.Groups[1].Value}{ESC}g", RegexOptions.Compiled);
-
-            content = Regex.Replace(content, "<hi[^<>]*>([^<>]+)</hi>", match => $"{ESC}M{match.Groups[1].Value}{ESC}g", RegexOptions.Compiled);
-            content = Regex.Replace(content, "<usg[^<>]*>([^<>]+)</usg>", match => $"{ESC}B{match.Groups[1].Value}{ESC}g", RegexOptions.Compiled);
-
-            content = Regex.Replace(content, "<author>([^<>]+)</author>", match => match.Groups[1].Value, RegexOptions.Compiled);
-            content = Regex.Replace(content, "<tr>([^<>]+)</tr>", match => match.Groups[1].Value, RegexOptions.Compiled);
-            content = Regex.Replace(content, "<trans[^<>]*>([^<>]+)</trans>", match => $"{match.Groups[1].Value} ", RegexOptions.Compiled);
-            content = Regex.Replace(content, "<bibl[^<>]*>([^<>]+)</bibl>", match => $"{ESC}D{match.Groups[1].Value}{ESC}g", RegexOptions.Compiled);
-            content = Regex.Replace(content, "<quote[^<>]*>([^<>]+)</quote>", match => $"{ESC}R{match.Groups[1].Value}{ESC}g ", RegexOptions.Compiled);
-            content = Regex.Replace(content, "<cit[^<>]*>([^<>]+)</cit>", match => match.Groups[1].Value, RegexOptions.Compiled);
-            content = Regex.Replace(content, "<pos[^<>]*>([^<>]+)</pos>", match => match.Groups[1].Value, RegexOptions.Compiled);
-            content = Regex.Replace(content, "<cb[^<>]*/>", match => match.Groups[1].Value, RegexOptions.Compiled);
-
-            content = Regex.Replace(content, "<sense[^<>]*>([^<>]+)</sense>", match => $"\n{match.Groups[1].Value}", RegexOptions.Compiled);
-            content = Regex.Replace(content, "<entryFree[^<>]*>([^<>]+)</entryFree>", match => $"{match.Groups[1].Value}\n", RegexOptions.Compiled);
-
-            content = Regex.Replace(content, $"({highlights})", match => $"{ESC}Y{match.Value}{ESC}g", RegexOptions.Compiled);
-
+            Console.WriteLine("-------------------------------------------------------------------------------");
             PrintInColors(content.Trim());
+            Console.WriteLine();
         }
     }
 
@@ -93,65 +123,105 @@ class LsDictionary
 
         foreach (var part in parts)
         {
-            if (part.StartsWith("W"))
+            if (part.Length == 0)
             {
-                Console.ForegroundColor = ConsoleColor.White;
-                Console.BackgroundColor = ConsoleColor.DarkGray;
-                Console.Write(part[1..]);
+                continue;
             }
-            else if (part.StartsWith("G"))
+
+            var color = part[0];
+
+            if (color == ESC)
             {
-                Console.ForegroundColor = ConsoleColor.Green;
-                Console.BackgroundColor = ConsoleColor.Black;
-                Console.Write(part[1..]);
-            }
-            else if (part.StartsWith("g"))
-            {
-                Console.ForegroundColor = ConsoleColor.Gray;
-                Console.BackgroundColor = ConsoleColor.Black;
-                Console.Write(part[1..]);
-            }
-            else if (part.StartsWith("B"))
-            {
-                Console.ForegroundColor = ConsoleColor.Blue;
-                Console.BackgroundColor = ConsoleColor.Black;
-                Console.Write(part[1..]);
-            }
-            else if (part.StartsWith("Y"))
-            {
-                Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.BackgroundColor = ConsoleColor.Black;
-                Console.Write(part[1..]);
-            }
-            else if (part.StartsWith("D"))
-            {
-                Console.ForegroundColor = ConsoleColor.DarkGray;
-                Console.BackgroundColor = ConsoleColor.Black;
-                Console.Write(part[1..]);
-            }
-            else if (part.StartsWith("R"))
-            {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.BackgroundColor = ConsoleColor.Black;
-                Console.Write(part[1..]);
-            }
-            else if (part.StartsWith("M"))
-            {
-                Console.ForegroundColor = ConsoleColor.Magenta;
-                Console.BackgroundColor = ConsoleColor.Black;
-                Console.Write(part[1..]);
-            }
-            else if (part.StartsWith("y"))
-            {
-                Console.ForegroundColor = ConsoleColor.DarkYellow;
-                Console.BackgroundColor = ConsoleColor.Black;
-                Console.Write(part[1..]);
+                color = _colorStack.Dequeue();
             }
             else
             {
-                Console.ForegroundColor = ConsoleColor.Gray;
-                Console.BackgroundColor = ConsoleColor.Black;
-                Console.Write(part);
+                _colorStack.Enqueue(color);
+            }
+
+            switch (color)
+            {
+                case 'W':
+                    Console.ForegroundColor = ConsoleColor.White;
+                    Console.BackgroundColor = ConsoleColor.Black;
+                    Console.Write(part[1..]);
+                    break;
+
+                case 'G':
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.BackgroundColor = ConsoleColor.Black;
+                    Console.Write(part[1..]);
+                    break;
+
+                case 'g':
+                    Console.ForegroundColor = ConsoleColor.DarkGray;
+                    Console.BackgroundColor = ConsoleColor.Black;
+                    Console.Write(part[1..]);
+                    break;
+
+                case 'B':
+                    Console.ForegroundColor = ConsoleColor.Blue;
+                    Console.BackgroundColor = ConsoleColor.Black;
+                    Console.Write(part[1..]);
+                    break;
+
+                case 'Y':
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.BackgroundColor = ConsoleColor.Black;
+                    Console.Write(part[1..]);
+                    break;
+
+                case 'D':
+                    Console.ForegroundColor = ConsoleColor.Gray;
+                    Console.BackgroundColor = ConsoleColor.Black;
+                    Console.Write(part[1..]);
+                    break;
+
+                case 'R':
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.BackgroundColor = ConsoleColor.Black;
+                    Console.Write(part[1..]);
+                    break;
+
+                case 'M':
+                    Console.ForegroundColor = ConsoleColor.Magenta;
+                    Console.BackgroundColor = ConsoleColor.Black;
+                    Console.Write(part[1..]);
+                    break;
+
+                case 'y':
+                    Console.ForegroundColor = ConsoleColor.DarkYellow;
+                    Console.BackgroundColor = ConsoleColor.Black;
+                    Console.Write(part[1..]);
+                    break;
+
+                case 'C':
+                    Console.ForegroundColor = ConsoleColor.Cyan;
+                    Console.BackgroundColor = ConsoleColor.Black;
+                    Console.Write(part[1..]);
+                    break;
+
+                case 'r':
+                    Console.ForegroundColor = ConsoleColor.DarkRed;
+                    Console.BackgroundColor = ConsoleColor.Black;
+                    Console.Write(part[1..]);
+                    break;
+
+                case '_':
+                    Console.ForegroundColor = ConsoleColor.White;
+                    Console.BackgroundColor = ConsoleColor.Red;
+                    Console.Write(part[1..]);
+                    break;
+
+                case '=':
+                    Console.ForegroundColor = ConsoleColor.White;
+                    Console.BackgroundColor = ConsoleColor.Blue;
+                    Console.Write(part[1..]);
+                    break;
+
+                default:
+                    Console.Write(part);
+                    break;
             }
         }
     }

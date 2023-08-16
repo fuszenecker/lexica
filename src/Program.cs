@@ -5,26 +5,41 @@ var headwordOption = new Option<string?>(
     new string[] { "--headword", "-h" },
     "The headword to search for (regex)");
 
-var contentOption = new Option<string?>(
-    new string[] { "--content", "-c" },
+var meaningOption = new Option<string?>(
+    new string[] { "--meaning", "-m" },
+    "The meaning to search for (regex)");
+
+var fullSearchOption = new Option<string?>(
+    new string[] { "--full-search", "-f" },
     "The content to search for (regex)");
 
-var tabWidthOption = new Option<int>(
-    new string[] { "--tab-width", "-t" },
-    () => 4,
-    "Width of the tab character");
-
-var rootCommand = new RootCommand();
-rootCommand.Description = "Searches the Lewis and Short dictionary for a headword and/or content";
-rootCommand.Add(headwordOption);
-rootCommand.Add(contentOption);
-rootCommand.Add(tabWidthOption);
-
-rootCommand.SetHandler<string?, string?, int>((headwordOptionValue, contentOptionValue, tabWidthOptionValue) =>
+var rootCommand = new RootCommand
 {
-    var dictionary = new LsDictionary(tabWidthOptionValue);
-    dictionary.LookupHeadword(headwordOptionValue);
-    // dictionary.LookupContent(contentOptionValue);
-}, headwordOption, contentOption, tabWidthOption);
+    Description = "Searches the Lewis and Short dictionary for a headword and/or content"
+};
+
+rootCommand.Add(headwordOption);
+rootCommand.Add(meaningOption);
+rootCommand.Add(fullSearchOption);
+
+rootCommand.SetHandler((headwordTerm, contentTerm, fullSearchTerm) =>
+{
+    var dictionary = new LsDictionary();
+
+    if (!string.IsNullOrEmpty(headwordTerm))
+    {
+        dictionary.LookupHeadword(headwordTerm);
+    }
+
+    if (!string.IsNullOrEmpty(contentTerm))
+    {
+        dictionary.LookupContent(contentTerm);
+    }
+
+    if (!string.IsNullOrEmpty(fullSearchTerm))
+    {
+        dictionary.LookupFullSearch(fullSearchTerm);
+    }
+}, headwordOption, meaningOption, fullSearchOption);
 
 rootCommand.Invoke(args);
