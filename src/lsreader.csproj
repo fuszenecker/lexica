@@ -36,4 +36,8 @@
     </None>
   </ItemGroup>
 
+  <Target Name="MyPreCompileTarget" BeforeTargets="Build">
+    <Copy SourceFiles="../CTS_XML_TEI/perseus/pdllex/lat/ls/lat.ls.perseus-eng2.xml" DestinationFolder="$(OutDir)/Dictionaries" />
+  </Target>
+
 </Project>
