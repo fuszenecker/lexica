@@ -176,7 +176,7 @@ class LsDictionary
 
     private void LoadDictionaries()
     {
-        foreach (var file in Directory.EnumerateFiles(DictionaryPath, "*.xml"))
+        foreach (var file in Directory.EnumerateFiles(Path.Combine(System.AppContext.BaseDirectory, DictionaryPath), "*.xml"))
         {
             var dictionary = XElement.Load(file);
             _dictionaries.Add(dictionary);
