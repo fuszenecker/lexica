@@ -96,7 +96,7 @@ class LsDictionary
         PrintResults(results, term);
     }
 
-    private void PrintResults(List<XElement> results, string highlights)
+    private static void PrintResults(List<XElement> results, string highlights)
     {
         Console.ForegroundColor = ConsoleColor.Gray;
 
