@@ -11,7 +11,8 @@ do
 {
     leafTags = new HashSet<string>();
     tagsList.Add(leafTags);
-    finished = Analyze(dictionary);
+ 
+    finished = Analyze(dictionary, leafTags);
 
     foreach (var tags in tagsList.SkipLast(1))
     {
@@ -27,7 +28,7 @@ foreach (var tags in tagsList)
     }
 }
 
-bool Analyze(XElement node)
+static bool Analyze(XElement node, HashSet<string> leafTags)
 {
     var descendants = node.Elements();
 
@@ -35,7 +36,7 @@ bool Analyze(XElement node)
     {
         foreach (var child in descendants)
         {
-            Analyze(child);
+            Analyze(child, leafTags);
         }
 
         return false;
