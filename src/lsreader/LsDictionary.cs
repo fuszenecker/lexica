@@ -3,7 +3,7 @@ using System.Xml.Linq;
 
 namespace LsReader;
 
-class LsDictionary
+public class LsDictionary
 {
     private const string DictionaryPath = "Dictionaries";
     const char ESC = '¤';
@@ -70,6 +70,10 @@ class LsDictionary
         PrintResults(results, term);
     }
 
+    /// <summary>
+    /// Lookup a term in all dictionaries.
+    /// </summary>
+    /// <param name="term">Term to search for.</param>
     public void LookupFullSearch(string? term)
     {
         if (term is null)
