@@ -3,38 +3,25 @@ using System.Xml.Linq;
 
 var dictionary = XElement.Load("Dictionaries/lat.ls.perseus-eng2.xml");
 
-var taglist = new List<List<string>>();
-var leveltags = new List<string>();
+var tagsList = new List<HashSet<string>>();
+var leafTags = new HashSet<string>();
 var finished = false;
 
 do
 {
-    leveltags = new List<string>();
-    taglist.Add(leveltags);
+    leafTags = new HashSet<string>();
+    tagsList.Add(leafTags);
     finished = Analyze(dictionary);
 
-    foreach (var tags in taglist.SkipLast(1))
+    foreach (var tags in tagsList.SkipLast(1))
     {
-        var remove = new List<string>();
-
-        foreach (var tag in tags)
-        {
-            if (leveltags.Contains(tag))
-            {
-                remove.Add(tag);
-            }
-        }
-
-        foreach (var tag in remove)
-        {
-            tags.Remove(tag);
-        }
+        tags.ExceptWith(leafTags);
     }
 } while (!finished);
 
-foreach (var tags in taglist)
+foreach (var tags in tagsList)
 {
-    if (tags.Count > 0)
+    if (tags.Any())
     {
         Console.WriteLine(String.Join(", ", tags));
     }
@@ -44,7 +31,7 @@ bool Analyze(XElement node)
 {
     var descendants = node.Elements();
 
-    if (descendants.Count() > 0)
+    if (descendants.Any())
     {
         foreach (var child in descendants)
         {
@@ -55,9 +42,9 @@ bool Analyze(XElement node)
     }
     else
     {
-        if (!leveltags.Contains(node.Name.ToString()))
+        if (!leafTags.Contains(node.Name.ToString()))
         {
-            leveltags.Add(node.Name.ToString());
+            leafTags.Add(node.Name.ToString());
         }
 
         if (node.Parent != null)
